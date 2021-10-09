@@ -10,4 +10,4 @@ This is a plugin for krita for creating custom static Noita maps. The maps are e
 
 ## Usage
 A manual on the basic usage of the plugin can be found by going to Configure Krita ‣ Python Plugins Manager then clicking Noita Editor.
-More detailed tutorials are planned.
+More detailed tutorials are planned for the future.
