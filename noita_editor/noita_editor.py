@@ -180,7 +180,8 @@ def get_entity_info(svg_str):
 
 def get_entity_script(data):
     filename = data["filename"]
-    script = 'EntityLoad("{}", x, y)'.format(filename)
+    processed_filename = filename.replace('<mod_name>', map_name)
+    script = 'EntityLoad("{}", x, y)'.format(processed_filename)
     if(filename=="script"):
         script = data["script"]
     if(filename=="spawn_perk"):
@@ -369,11 +370,10 @@ def export_map():
                         spawn_y = y
                         continue
                     script = get_entity_script(info)
-                    entities.append((filename, x, y))
-                    if(filename not in entity_colors):
-                        entity_colors[filename] = current_color.to_bytes(4, 'little')
+                    entities.append((script, x, y))
+                    if(script not in entity_colors):
+                        entity_colors[script] = current_color.to_bytes(4, 'little')
                         color_string = "{:08x}".format(current_color)
-                        processed_filename = filename.replace('<mod_name>', map_name)
                         biome_lua_append += biome_lua_entity_append.format(color_string, script)
                         current_color -= 1
 
@@ -398,9 +398,9 @@ def export_map():
     bytes_per_pixel = 4
     entity_pixel_array = QByteArray(doc.width()*doc.height()*bytes_per_pixel, b'\x00')
 
-    for filename, x, y in entities:
+    for script, x, y in entities:
         if(0 <= x and x < doc.width() and 0 <= y and y < doc.height()):
-            entity_pixel_array.replace((x+y*doc.width())*bytes_per_pixel, 4, entity_colors[filename])
+            entity_pixel_array.replace((x+y*doc.width())*bytes_per_pixel, 4, entity_colors[script])
 
     entity_pixel_layer.setPixelData(entity_pixel_array, 0, 0, doc.width(), doc.height())
     doc.refreshProjection()
