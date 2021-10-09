@@ -178,14 +178,14 @@ def get_entity_info(svg_str):
     info_match = re.search(r'<text.*?>(.*?)</text>', svg_str)
     return json.loads(html.unescape(info_match.group(1))) if info_match else info_match
 
-def get_entity_script(data):
+def get_entity_script(data, map_name):
     filename = data["filename"]
     processed_filename = filename.replace('<mod_name>', map_name)
     script = 'EntityLoad("{}", x, y)'.format(processed_filename)
     if(filename=="script"):
         script = data["script"]
     if(filename=="spawn_perk"):
-        script = 'perk_spawn(x,y,"{}",{})'.format(data["perk_id"].strip(), "true" if data["remove_other_perks"] else "false")
+        script = 'perk_spawn(x,y,"{}",{})'.format(data["perk_id"].strip(), "false" if data["remove_other_perks"] else "true")
     if(filename=="spawn_card"):
         script = 'CreateItemActionEntity("{}",x,y)'.format(data["action_id"].strip())
     if(filename=="spawn_wand"):
@@ -207,6 +207,17 @@ end
             if(not action):
                 continue
             script += '\nAddGunAction(wand,"{}")'.format(action)
+    if(filename=="portal"):
+        script = """
+local portal = EntityLoad("data/entities/buildings/teleport.xml",x,y)
+local teleport_comp = EntityGetFirstComponentIncludingDisabled(portal, "TeleportComponent")
+ComponentSetValue2(teleport_comp, "target", {}, {})
+ComponentSetValue2(teleport_comp, "target_x_is_absolute_position", {})
+ComponentSetValue2(teleport_comp, "target_y_is_absolute_position", {})
+""".format(data["target_x"].strip(),
+           data["target_y"].strip(),
+           "true" if data["target_x_is_absolute_position"] else "false",
+           "true" if data["target_y_is_absolute_position"] else "false")
     if(filename=="other_entity"):
         script = 'EntityLoad("{}",x,y)'.format(data["other_filename"].strip().replace('\\', '/'))
     return script
@@ -348,6 +359,7 @@ def export_map():
         nonlocal ppi
         nonlocal spawn_x
         nonlocal spawn_y
+        nonlocal map_name
         position = position+layer.position()
         if(layer.type() == "vectorlayer"):
             for shape in layer.shapes():
@@ -369,7 +381,7 @@ def export_map():
                         spawn_x = x
                         spawn_y = y
                         continue
-                    script = get_entity_script(info)
+                    script = get_entity_script(info, map_name)
                     entities.append((script, x, y))
                     if(script not in entity_colors):
                         entity_colors[script] = current_color.to_bytes(4, 'little')
@@ -945,6 +957,10 @@ class EntitiesDocker(DockWidget):
         self.entities.append(Entity("spawn_marker", "Spawn Location", "spawn,player,pos,position",
                                     sprite=Sprite(os.path.join(plugin_path, "spawn_marker.png"), 10, 13, absolute_path=True)))
 
+        self.entities.append(Entity("other_entity", "Other Entity", "other,entity,filename",
+                                    sprite=Sprite(os.path.join(plugin_path, "unknown.png"), 0, 0, centered=True, absolute_path=True),
+                                    extra_fields=[EntityField("other_filename", "Filename", "text_line", "The filename of the entity you want to place.")]))
+
         self.entities.append(Entity("script", "Custom Lua Script", "custom,script,lua,code",
                                     sprite=Sprite(os.path.join(plugin_path, "custom_script.png"), 0, 0, centered=True, absolute_path=True),
                                     extra_fields=[EntityField("script", "Script (x, y)", "text_box", "This script will be executed when the region is loaded, x and y are the coordinates of the position this script is placed")]))
@@ -964,10 +980,14 @@ class EntitiesDocker(DockWidget):
                                                   EntityField("ac_actions", "Always Casts", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki"),
                                                   EntityField("actions", "Spells", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki")]))
 
-        self.entities.append(Entity("other_entity", "Other Entity", "other,entity,filename",
-                                    sprite=Sprite(os.path.join(plugin_path, "unknown.png"), 0, 0, centered=True, absolute_path=True),
-                                    extra_fields=[EntityField("other_filename", "Filename", "text_line", "The filename of the entity you want to place.")]))
-
+        self.entities.append(Entity("portal", "Portal", "portal,teleport",
+                                    sprite=Sprite(os.path.join(plugin_path, "portal.png"), 0, 0, centered=True, absolute_path=True),
+                                    extra_fields=[
+                                        EntityField("target_x", "Target x", "text_line", "Destination x coordinate"),
+                                        EntityField("target_y", "Target y", "text_line", "Destination y coordinate"),
+                                        EntityField("target_x_is_absolute_position", "Absolute x", "boolean", "If selected the target x coordinate is the absolute coordinate, otherwise it is relative to the portal location"),
+                                        EntityField("target_y_is_absolute_position", "Absolute y", "boolean", "If selected the target y coordinate is the absolute coordinate, otherwise it is relative to the portal location"),
+                                    ]))
         os.chdir(noita_data_path)
         for filename in Path("data/entities").rglob("*.xml"):
             self.entities.append(Entity.from_xml(str(filename)))
