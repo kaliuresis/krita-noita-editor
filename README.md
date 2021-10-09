@@ -1,5 +1,5 @@
 # krita-noita-editor
-This is a plugin for krita for creating custom static noita maps.
+This is a plugin for krita for creating custom static Noita maps. The maps are exported as a mod, which can be shared like any other Noita mod.
 
 ## Installation
 * Make sure you have krita 5.0 or higher for windows, which can be downloaded for free at https://binary-factory.kde.org/job/Krita_Stable_Windows_Build/. You can also buy it on the windows store, steam, or the epic store to support the developers and get automatic updates (I'm not sure how getting 5.0 works for these).
