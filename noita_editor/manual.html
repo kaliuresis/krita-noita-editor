@@ -36,7 +36,11 @@
       The list of available entities is shown in the Noita Entities docker. These can be dragged and dropped into any vector layer. Entities have handles to be scaled and rotated since there is no way for the plugin to disable them. However any transformations are ignored when exporting the map.
     </p>
     <p>
-      There are a few special entities that do things other than just loading an entity xml. The Spawn Marker entity is a special entity that is used to specify the player spawn position. Custom Lua Script entities allow you to run arbitrary lua code at a location when it is generated, x and y are passed as parameters to this script. The Spawn Perk, Spawn Spell Card, and Spawn Wand entities allow you to place these objects by specifying perk/spell id&apos;s. The Other Entity allows you to place entities with a given filename, which can be used to place any entity that is not automatically detected. The Portal entity allows you to place a portal with a custom destination, If you are using absolute coordinates y = 0 is the top of the map, with +y going down, and x = 0 is start of the middle chunk of the map, which is the middle of the map rounded up to the next multiple of 512, with +x going to the right.
+      There are a few special entities that do things other than just loading an entity xml. The Spawn Marker entity is a special entity that is used to specify the player spawn position.
+      Custom Lua Script entities allow you to run arbitrary lua code at a location when it is generated, x and y are passed as parameters to this script.
+      The Spawn Perk, Spawn Flask, and Spawn Spell Card, and Spawn Wand entities allow you to place these objects by specifying perk/material/spell id&apos;s.
+      The Other Entity allows you to place entities with a given filename, which can be used to place any entity that is not automatically detected.
+      The Portal entity allows you to place a portal with a custom destination, If you are using absolute coordinates y = 0 is the top of the map, with +y going down, and x = 0 is start of the middle chunk of the map, which is the middle of the map rounded up to the next multiple of 512, with +x going to the right.
     </p>
     <h2>Exporting and Playing</h2>
     <p>

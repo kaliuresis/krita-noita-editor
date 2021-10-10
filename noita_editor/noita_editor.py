@@ -192,10 +192,8 @@ def get_entity_script(data, map_name):
     if(filename=="spawn_wand"):
         script = """
 local wand = EntityLoad("{}",x,y)
-for i,lua_comp in ipairs(EntityGetComponent(wand, "LuaComponent") or {{}}) do
-if(string.sub(ComponentGetValue2(lua_comp, "script_source_file"),1,38) == "data/scripts/gun/procedural/wand_level") then
-EntityRemoveComponent(lua_comp)
-end
+for i,child in ipairs(EntityGetAllChildren(wand) or {{}}) do
+EntityKill(child)
 end
 """.format(data["wand_file"].strip().replace('\\', '/'))
         for action in data["ac_actions"].split(','):
@@ -208,6 +206,14 @@ end
             if(not action):
                 continue
             script += '\nAddGunAction(wand,"{}")'.format(action)
+    if(filename=="spawn_flask"):
+        script = 'local potion = EntityLoad("data/entities/items/pickup/potion_empty.xml",x,y)'
+        for material, amount in zip(data["material_names"].split(','), data["material_amounts"].split(',')):
+            material = material.strip()
+            amount = amount.strip()
+            if(not material):
+                continue
+            script += '\nAddMaterialInventoryMaterial(potion,"{}",{})'.format(material,amount)
     if(filename=="portal"):
         script = """
 local portal = EntityLoad("data/entities/buildings/teleport.xml",x,y)
@@ -743,8 +749,8 @@ class Sprite:
         self.width  = self.image.width()
         self.height = self.image.height()
         if(centered):
-            offset_x += self.width/2
-            offset_y += self.height/2
+            offset_x += self.width//2
+            offset_y += self.height//2
 
         self.offset_x = offset_x
         self.offset_y = offset_y
@@ -972,13 +978,18 @@ class EntitiesDocker(DockWidget):
                                     extra_fields=[EntityField("perk_id", "Perk ID", "text_line", "The id of the perk. A list of perk ids can be found on the noita wiki"),
                                                   EntityField("remove_other_perks", "Remove Other Perks", "boolean", "If enabled all other loaded perks will be removed on pickup (unless you have Perk Lottery)")]))
 
+        self.entities.append(Entity("spawn_flask", "Spawn Flask", "spawn,potion,flask,material,bottle",
+                                    sprite=Sprite(os.path.join(plugin_path, "spawn_flask.png"), 0, 0, centered=True, absolute_path=True),
+                                    extra_fields=[EntityField("material_names", "Materials", "text_line", "A comma seperated list of material names, as defined in data/materials.xml"),
+                                                  EntityField("material_amounts", "Amounts (1000=100%)", "text_line", "A comma seperated list of amounts")]))
+
         self.entities.append(Entity("spawn_card", "Spawn Spell Card", "spawn,spell,card,action",
                                     sprite=Sprite(os.path.join(plugin_path, "spawn_card.png"), 0, 0, centered=True, absolute_path=True),
                                     extra_fields=[EntityField("action_id", "Action ID", "text_line", "The id of the spell. A list of spell ids can be found on the noita wiki")]))
 
         self.entities.append(Entity("spawn_wand", "Spawn Wand", "spawn,wand,rod,stick",
                                     sprite=Sprite(os.path.join(plugin_path, "spawn_wand.png"), 0, 0, centered=True, absolute_path=True),
-                                    extra_fields=[EntityField("wand_file", "Filename", "text_line", "The filename of the wand to be spawned, default spell spawning scripts will be disabled"),
+                                    extra_fields=[EntityField("wand_file", "Filename", "text_line", "The filename of the wand to be spawned, spells that would normally spawn on that wand are deleted"),
                                                   EntityField("ac_actions", "Always Casts", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki"),
                                                   EntityField("actions", "Spells", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki")]))
 
