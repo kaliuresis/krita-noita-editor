@@ -15,7 +15,7 @@
   <body>
     <h1>Noita Editor</h1>
     <h2>Overview</h2>
-    This is a krita plugin to create static noita maps, which export as a mod.
+    This is a krita plugin to create static Noita maps, which export as a mod.
     <h2>Setup</h2>
     <p>
       Before starting, unpack the game files. The instructions for this are in <span class="filepath">tools_modding/READ_ME_FIRST.txt</span> in your Noita folder. This plugin uses the unpacked files to find the available materials and entities.
@@ -36,21 +36,29 @@
       The list of available entities is shown in the Noita Entities docker. These can be dragged and dropped into any vector layer. Entities have handles to be scaled and rotated since there is no way for the plugin to disable them. However any transformations are ignored when exporting the map.
     </p>
     <p>
-      There are a few special entities that do things other than just loading an entity xml. The spawn marker entity is a special entity that is used to specify the player spawn position. Custom Lua Script entities allow you to run arbitrary lua code at a location when it is generated, x and y are passed as parameters to this script. The Spawn Perk, Spawn Spell Card, and Spawn Wand entities allow you to place these objects by specifying perk/spell id&apos;s. The Other Entity allows you to place entities with a given filename, which can be used to place any entity that is not automatically detected.
+      There are a few special entities that do things other than just loading an entity xml. The Spawn Marker entity is a special entity that is used to specify the player spawn position. Custom Lua Script entities allow you to run arbitrary lua code at a location when it is generated, x and y are passed as parameters to this script. The Spawn Perk, Spawn Spell Card, and Spawn Wand entities allow you to place these objects by specifying perk/spell id&apos;s. The Other Entity allows you to place entities with a given filename, which can be used to place any entity that is not automatically detected. The Portal entity allows you to place a portal with a custom destination, If you are using absolute coordinates y = 0 is the top of the map, with +y going down, and x = 0 is start of the middle chunk of the map, which is the middle of the map rounded up to the next multiple of 512, with +x going to the right.
     </p>
     <h2>Exporting and Playing</h2>
     <p>
-      Click the Export button in the Noita Editor docker, and follow the instructions in the window that pops up. This will create a mod and by default place it in your noita mods folder. To play your map, (re)start noita, find and enable your map in the mods list, then start a new game.
+      Click the Export button in the Noita Editor docker, and follow the instructions in the window that pops up. This will create a mod and by default place it in your noita mods folder. To play your map, (re)start Noita, find and enable your map in the mods list, then start a new game.
     </p>
     <h2>Custom Files</h2>
     <p>
       Any files in the <span class="filepath">mod_files</span> folder, in the same location as the map .kra will get copied to the final mod folder when you export your map. You can use this to create custom entities or scripts. Any custom entities should be automatically detected and added to the Noita Entities list.
     </p>
-    <h2>Customizing Biome Materials</h2>
+    <h2>Customizing Biomes</h2>
     <p>
       You can create a file called <span class="filepath">biome_materials.xml</span> in the same folder as the map (not <span class="filepath">mod_files</span>). This allows you to specify the materials used to fill everywhere that is empty in the materials layers. It follows the same syntax the materials section in the <span class="filepath">data/biome/*.xml</span> files in the game data. This allows you to fill the region outside your map. You can use the air material in your map to prevent the inside from being filled in.
+    <p>
+    </p>
+      To have normal biomes mixed into your map. You can create an image <span class="filepath">mod_files/data/biome_impl/biome_map.png</span>, which should have a size in pixels equal to the dimensions of your map divided by 512 and rounded up. This is the biome map the game uses to figure out what should spawn in each chunk (512x512 reagion). The map you draw will get used if the corresponding pixel in the biome map is #012345, otherwise the game will use a normal biome. The list of colors of vanilla biomes can be found in <span class="filepath">data/biomes/_biomes_all.xml</span>, or in <a href="https://docs.google.com/spreadsheets/d/1HbXuQ4nIQ1d9WV4tiEl9qCLqCdRnmVby7I2YOPcCULU/edit?usp=sharing">this spreadsheet by Aeternalis</a>.
     </p>
     <h2>Uploading to the Workshop</h2>
+    <p>
     Follow the instructions in <span class="filepath">tools_modding/READ_ME_FIRST.txt</span>, except instead of placing files directly in the mod folder, place them into the <span class="filepath">mod_files</span> folder of your map, then export it and do the <span class="filepath">noita_dev.exe -workshop_upload</span>.
+    </p>
+    <p>
+    Maps can also be shared directly by copying to and from the Noita mods folder.
+    </p>
   </body>
 </html>

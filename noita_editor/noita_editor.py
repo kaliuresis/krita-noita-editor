@@ -61,7 +61,7 @@ dofile("data/scripts/gun/procedural/gun_action_utils.lua")
 RegisterSpawnFunction( 0xffffeedd, "init" )
 
 function init( x, y, w, h )
-        file_suffix = "_"..x.."_"..y..".png"
+        file_suffix = "_"..(x-{x_offset}).."_"..y..".png"
         LoadPixelScene("mods/{0}/files/biome_impl/materials"..file_suffix, "mods/{0}/files/biome_impl/colors"..file_suffix, x, y, "mods/{0}/files/biome_impl/background"..file_suffix, true)
 end
 """
@@ -72,6 +72,7 @@ local nxml = dofile_once("mods/{0}/files/lib/nxml.lua")
 local biomes_all = ModTextFileGetContent("data/biome/_biomes_all.xml")
 local biomes_xml = nxml.parse(biomes_all)
 
+biomes_xml.attr.biome_offset_y="0"
 biomes_xml:add_child(nxml.new_element("Biome", {{biome_filename="mods/{0}/files/biome.xml", height_index="0", color="ff012345"}}))
 
 ModTextFileSetContent("data/biome/_biomes_all.xml", nxml.tostring(biomes_xml))
@@ -474,11 +475,12 @@ def export_map():
     data_biome_path = os.path.join(map_dir, "data/biome")
     os.makedirs(data_biome_path, exist_ok=True)
 
+    x_offset = int(biome_map_w//2)*512
     files_to_copy = [
         [os.path.join(data_biome_path, "_pixel_scenes.xml"), pixel_scenes_xml, {}, ""],
         [os.path.join(files_path, "biome.xml"), custom_biome_xml, {"materials": user_biome_materials_xml}, ""],
-        [os.path.join(files_path, "biome.lua"), custom_biome_lua, {}, biome_lua_append],
-        [os.path.join(map_dir, "init.lua")    , init_lua, {"start_x":spawn_x, "start_y":spawn_y}, user_init_lua],
+        [os.path.join(files_path, "biome.lua"), custom_biome_lua, {"x_offset":x_offset}, biome_lua_append],
+        [os.path.join(map_dir, "init.lua")    , init_lua, {"start_x":spawn_x+x_offset, "start_y":spawn_y}, user_init_lua],
     ]
     for filename, contents, kwargs, appendix in files_to_copy:
         export_status.setText("copying {}...".format({filename}))
