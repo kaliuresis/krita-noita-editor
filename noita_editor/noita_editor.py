@@ -370,15 +370,15 @@ def export_map():
         position = position+layer.position()
         if(layer.type() == "vectorlayer"):
             for shape in layer.shapes():
-                info = get_entity_info(shape.toSvg())
-                if(info):
-                    # filename = info_match.group(1).replace("\\", "/")
-                    # offset_x = float(info_match.group(2))
-                    # offset_y = float(info_match.group(3))
-                    # extra_data = float(info_match.group(4))
-                    filename = info['filename']
-                    offset_x = info['x']
-                    offset_y = info['y']
+                data = get_entity_info(shape.toSvg())
+                if(data):
+                    # filename = data_match.group(1).replace("\\", "/")
+                    # offset_x = float(data_match.group(2))
+                    # offset_y = float(data_match.group(3))
+                    # extra_data = float(data_match.group(4))
+                    filename = data['filename']
+                    offset_x = data['x']
+                    offset_y = data['y']
 
                     transform = shape.transformation()
                     pos = position+QPointF(transform.dx(), transform.dy())*(ppi/72)
@@ -388,7 +388,7 @@ def export_map():
                         spawn_x = x
                         spawn_y = y
                         continue
-                    script = get_entity_script(info, map_name)
+                    script = get_entity_script(data, map_name)
                     entities.append((script, x, y))
                     if(script not in entity_colors):
                         entity_colors[script] = current_color.to_bytes(4, 'little')
@@ -425,22 +425,33 @@ def export_map():
     doc.refreshProjection()
     entity_pixel_layer.setLocked(True)
 
+    biome_map_w = (doc.width()+511)//512
+    biome_map_h = (doc.height()+511)//512
+
     export_status.setText("exporting layers...")
-    layers = doc.topLevelNodes()
+    # for layer_name in export_layers:
+    #     layer = doc.nodeByName(layer_name)
+    #     for x in range(0, doc.width()-1, 512):
+    #         for y in range(0, doc.height()-1, 512):
+    #             filename = os.path.join(export_dir, "%s_%d_%d.png"%(layer.name(), x, y))
+    #             success = layer.save(filename, ppi, ppi, info, QRect(x,y,512,512))
     for layer_name in export_layers:
         layer = doc.nodeByName(layer_name)
+        filename = os.path.join(export_dir, "%s_full.png"%(layer.name()))
+        success = layer.save(filename, ppi, ppi, info, QRect(0,0,biome_map_w*512,biome_map_w*512))
+        image = QImage(filename)
         for x in range(0, doc.width()-1, 512):
             for y in range(0, doc.height()-1, 512):
-                filename = os.path.join(export_dir, "%s_%d_%d.png"%(layer.name(), x, y))
-                success = layer.save(filename, ppi, ppi, info, QRect(x,y,512,512))
+                tile_filename = os.path.join(export_dir, "%s_%d_%d.png"%(layer.name(), x, y))
+                image.copy(x,y,512,512).save(tile_filename)
+        os.remove(filename)
+
 
     export_status.setText("creating biome map...")
     files_path = os.path.join(map_dir, "files/")
     data_biome_impl_path = os.path.join(map_dir, "data/biome_impl/")
     os.makedirs(data_biome_impl_path, exist_ok=True)
 
-    biome_map_w = (doc.width()+511)//512
-    biome_map_h = (doc.height()+511)//512
     biome_map_doc = KI.createDocument(biome_map_w, biome_map_h, "biome_map.png", "RGBA", "U8", "", 120.0)
     biome_map_doc.setBackgroundColor(QColor("#ff012345"))
     biome_map_doc.setBatchmode(True)
