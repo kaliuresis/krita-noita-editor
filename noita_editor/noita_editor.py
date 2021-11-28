@@ -181,7 +181,7 @@ def get_entity_info(svg_str):
 
 def get_entity_script(data, map_name):
     filename = data["filename"]
-    processed_filename = filename.replace('<mod_name>', map_name)
+    processed_filename = filename.replace('<mod_name>', map_name).replace("\\", "/")
     script = 'EntityLoad("{}", x, y)'.format(processed_filename)
     if(filename=="script"):
         script = data["script"]
@@ -196,7 +196,7 @@ for i,child in ipairs(EntityGetAllChildren(wand) or {{}}) do
 EntityKill(child)
 end
 """.format(data["wand_file"].strip().replace('\\', '/'))
-        for action in data["ac_actions"].split(','):
+        for action in data["ac_actions"].split(',')[-1::-1]:
             action = action.strip()
             if(not action):
                 continue
@@ -206,6 +206,26 @@ end
             if(not action):
                 continue
             script += '\nAddGunAction(wand,"{}")'.format(action)
+        if(data["shuffle"] or data["spells_per_cast"] or data["cast_delay"] or data["recharge_time"] or data["mana_max"] or data["mana_charge_speed"] or data["capacity"] or data["spread"] or data["speed"]):
+            script += '\nlocal ability_component = EntityGetFirstComponentIncludingDisabled(wand, "AbilityComponent")'
+        if(data["shuffle"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gun_config", "shuffle_deck_when_empty", {})'.format("true" if data["shuffle"] else "false")
+        if(data["spells_per_cast"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gun_config", "actions_per_round", {})'.format(data["spells_per_cast"])
+        if(data["cast_delay"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gunaction_config", "fire_rate_wait", {})'.format(data["cast_delay"])
+        if(data["recharge_time"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gun_config", "reload_time", {})'.format(data["recharge_time"])
+        if(data["mana_max"]):
+            script += '\nComponentSetValue2(ability_component, "mana_max", {})'.format(data["mana_max"])
+        if(data["mana_charge_speed"]):
+            script += '\nComponentSetValue2(ability_component, "mana_charge_speed", {})'.format(data["mana_charge_speed"])
+        if(data["capacity"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gun_config", "deck_capacity", {})'.format(data["capacity"])
+        if(data["spread"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gunaction_config", "spread_degrees", {})'.format(data["spread"])
+        if(data["speed"]):
+            script += '\nComponentObjectSetValue2(ability_component, "gunaction_config", "speed_multiplier", {})'.format(data["speed"])
     if(filename=="spawn_flask"):
         script = 'local potion = EntityLoad("data/entities/items/pickup/potion_empty.xml",x,y)'
         for material, amount in zip(data["material_names"].split(','), data["material_amounts"].split(',')):
@@ -275,7 +295,7 @@ def export_map():
     else:
         map_user_name = map_name
         map_description = "A custom map."
-        mod_xml_tree = ET.fromstring(mod_xml.format(map_user_name, map_description))
+        mod_xml_tree = ET.ElementTree(ET.fromstring(mod_xml.format(map_user_name, map_description)))
 
     save_dialogue = QDialog()
     save_dialogue.setLayout(QVBoxLayout())
@@ -1002,7 +1022,17 @@ class EntitiesDocker(DockWidget):
                                     sprite=Sprite(os.path.join(plugin_path, "spawn_wand.png"), 0, 0, centered=True, absolute_path=True),
                                     extra_fields=[EntityField("wand_file", "Filename", "text_line", "The filename of the wand to be spawned, spells that would normally spawn on that wand are deleted"),
                                                   EntityField("ac_actions", "Always Casts", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki"),
-                                                  EntityField("actions", "Spells", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki")]))
+                                                  EntityField("actions", "Spells", "text_line", "A comma separated list of action ids. A list of spell action ids can be found on the noita wiki"),
+                                                  EntityField("shuffle", "Shuffle", "boolean", "If checked the wand will be shuffle yes"),
+                                                  EntityField("spells_per_cast", "Spell/Cast", "text_line", "The number of spells drawn by the wand each cast"),
+                                                  EntityField("cast_delay", "Cast Delay", "text_line", "The number of frames of cast delay, each frame is 1/60th of a second"),
+                                                  EntityField("recharge_time", "Recharge Time", "text_line", "The number of frames of recharge time, each frame is 1/60th of a second"),
+                                                  EntityField("mana_max", "Mana Max", "text_line", "The maximum amount of mana the wand can have"),
+                                                  EntityField("mana_charge_speed", "Mana Charge Speed", "text_line", "The mana/second of the wands passive recharge"),
+                                                  EntityField("capacity", "Capacity", "text_line", "The number of spell slots on the wand"),
+                                                  EntityField("spread", "Spread", "text_line", "The spread of the wand in degrees"),
+                                                  EntityField("speed", "Speed Multiplier", "text_line", "The projectile speed multiplier of the wand")
+                                                  ]))
 
         self.entities.append(Entity("portal", "Portal", "portal,teleport",
                                     sprite=Sprite(os.path.join(plugin_path, "portal.png"), 0, 0, centered=True, absolute_path=True),
